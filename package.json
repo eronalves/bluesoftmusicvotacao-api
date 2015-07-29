@@ -1,0 +1,11 @@
+{
+    "name": "bluesoftmusicvotacao-api",
+    "main": "server.js",
+    "dependencies": {
+        "express": "4.0.0",
+        "mongoose": "~4.1.0",
+        "body-parser": "~1.0.1",
+        "cors": "~2.7.1",
+        "async": "~1.4.0"
+    }
+}
