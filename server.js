@@ -27,52 +27,62 @@ router.get('/', function(req, res) {
     res.json({ message: 'Bem-vindo a api de Votação da Bluesoft Music!' });   
 });
 
-router.route('/votacao')
-    .post(function(req, res){
+router.get('/votacao/:email?', function(req, res){
+    var find = {email: '' + req.params.email};    
+    Votacao.findOne(find, function(err,obj) { 
+        if(err)
+            res.send(err);
+        
+        res.json(obj);
+    });        
+});
+
+router.route('/votacao')    
+ .post(function(req, res){
+       
         Votacao.findOne({email: '' + req.body.email}, function(err,obj) { 
             if(err)
                 res.send(err);
-            console.log('encontrou');
-            if(obj){
-                console.log('error');
-                res.status(400).send('E-mail já utilizado para votação');
-                return;
+            
+            if(!obj){                     
+                var VotacaoObj = new Votacao();
+                VotacaoObj.nome = req.body.nome;
+                VotacaoObj.email = req.body.email;
+
+                var id = VotacaoObj._id;
+                VotacaoObj.save(function(err, obj){
+                    if(err)
+                        res.send(err);  
+
+                });        
+
+                if(id){
+                    async.each(req.body.votos, function(voto, callback){                                            
+                        var VotoObj = new Voto();
+                        VotoObj.votacao = id;
+                        VotoObj.idBanda = voto._id;
+                        VotoObj.nomeBanda = voto.nome;
+                        VotoObj.votos = voto.votos;
+
+                        VotoObj.save(function(err){
+                            if(err)
+                                res.send(err);  
+
+                            callback();
+                        });
+
+                    });
+                }
+
+                res.json({message: 'Votação inserida!'});                             
+            }else{
+                res.json({message: 'E-mail já utilizado para votação!'});
             }
+            
         });    
     
-        if(!(res.status == 400)){
-            var VotacaoObj = new Votacao();
-            VotacaoObj.nome = req.body.nome;
-            VotacaoObj.email = req.body.email;
-
-            var id = VotacaoObj._id;
-            VotacaoObj.save(function(err, obj){
-                if(err)
-                    res.send(err);  
-
-            });        
-
-            if(id){
-                async.each(req.body.votos, function(voto, callback){                                            
-                    var VotoObj = new Voto();
-                    VotoObj.votacao = id;
-                    VotoObj.idBanda = voto._id;
-                    VotoObj.nomeBanda = voto.nome;
-                    VotoObj.votos = voto.votos;
-
-                    VotoObj.save(function(err){
-                        if(err)
-                            res.send(err);  
-
-                        callback();
-                    });
-
-                });
-            }
-
-            res.json({message: 'Votação inserida!'}); 
-        }
-});
+       
+  });
 
 router.route('/rankingVotacao')
     .get(function(req, res){                           
